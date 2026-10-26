@@ -82,6 +82,7 @@ APP_EXCLUDES=(
   --exclude='./.env.production'
   --exclude='./.env.development'
   --exclude='./.env.test'
+  --exclude='./demo/.env*'
   --exclude='./*.db'
   --exclude='./*.db-wal'
   --exclude='./*.db-shm'
