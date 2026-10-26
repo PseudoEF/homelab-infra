@@ -1,0 +1,51 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# Автозапуск после перезагрузки телефона. Вызывается Termux:Boot.
+export SVDIR=$PREFIX/var/service
+SERVICES="sshd nginx panel gordaya cloudflared panel-demo gordaya-demo"
+
+# Не даём CPU уснуть при выключенном экране.
+termux-wake-lock 2>/dev/null
+
+# Постгрес, редис и ssh-agent выключены: они не используются проектами,
+# а Android убивает процессы при превышении лимита phantom process.
+touch "$SVDIR/postgres/down" "$SVDIR/redis/down" "$SVDIR/ssh-agent/down" 2>/dev/null
+
+# Watchdog выживает при перезагрузке и чинит runsvdir, если Android его убил.
+termux-job-scheduler --script "$HOME/.termux/watchdog.sh" --job-id 1001 \
+  --period-ms 900000 --persisted true --battery-not-low false >/dev/null 2>&1
+
+# Сброс синтетической базы Gordaya-демо каждые 6 часов.
+if [ -x "$HOME/apps/gordaya-demo/demo/reset-job.sh" ]; then
+  termux-job-scheduler --script "$HOME/apps/gordaya-demo/demo/reset-job.sh" \
+    --job-id 1002 --period-ms 21600000 --persisted true --network any >/dev/null 2>&1
+fi
+
+i=0
+while [ $i -lt 12 ]; do
+  pgrep -x runsvdir >/dev/null 2>&1 && break
+  if [ $i -eq 3 ]; then
+    setsid nohup runsvdir "$SVDIR" >> "$HOME/logs/runsvdir.log" 2>&1 < /dev/null &
+  fi
+  sleep 2
+  i=$((i + 1))
+done
+
+TOTAL=$(echo $SERVICES | wc -w)
+UP=0
+for attempt in 1 2 3 4 5; do
+  sleep 5
+  for s in $SERVICES; do
+    rm -f "$SVDIR/$s/down"
+    [ -e "$SVDIR/$s/supervise/ok" ] && sv up "$s" 2>/dev/null
+  done
+  sleep 5
+  UP=0
+  for s in $SERVICES; do
+    sv status "$s" 2>&1 | grep -q "^run:" && UP=$((UP + 1))
+  done
+  [ "$UP" -eq "$TOTAL" ] && break
+done
+
+STATUS="$(sv status $SERVICES 2>&1 | tr '\n' ' ')"
+termux-notification --id srvboot --title "Сервер: $UP/$TOTAL сервисов" \
+  --content "$STATUS" --vibrate 0 --priority min 2>/dev/null

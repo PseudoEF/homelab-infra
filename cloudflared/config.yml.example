@@ -1,0 +1,28 @@
+# Copy to ~/.cloudflared/config.yml and replace <TUNNEL_ID>.
+# The credentials JSON is created by `cloudflared tunnel create <name>`.
+tunnel: <TUNNEL_ID>
+credentials-file: /data/data/com.termux/files/home/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  # Real salon app. Keep this independent from the public demos.
+  - hostname: gordaya.pp.ua
+    service: http://127.0.0.1:3000
+  - hostname: www.gordaya.pp.ua
+    service: http://127.0.0.1:3000
+
+  # Portfolio and public demos, all behind nginx.
+  - hostname: pseudoef.pp.ua
+    service: http://127.0.0.1:8080
+  - hostname: www.pseudoef.pp.ua
+    service: http://127.0.0.1:8080
+  - hostname: crm.pseudoef.pp.ua
+    service: http://127.0.0.1:8080
+  - hostname: sim.pseudoef.pp.ua
+    service: http://127.0.0.1:8080
+  - hostname: panel.pseudoef.pp.ua
+    service: http://127.0.0.1:8080
+  - hostname: salon.pseudoef.pp.ua
+    service: http://127.0.0.1:8080
+
+  # Everything else is closed.
+  - service: http_status:404
