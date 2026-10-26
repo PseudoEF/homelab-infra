@@ -1,16 +1,20 @@
 # DNS for `pseudoef.pp.ua`
 
+> Status: verified on 2026-10-26. All six proxied CNAMEs are live and return
+> `200`; the six wrong records in the salon zone were deleted. Tunnel ID:
+> `dc30f777-c6b2-4913-9a24-f257c5ee9fdd`.
+
 The tunnel is connected and the Cloudflare zone for `pseudoef.pp.ua` is active,
-but the zone is **not the same zone as the tunnel certificate** (`gordaya.pp.ua`).
-Because of that, this command is wrong for the portfolio hostnames:
+but it is **not the same zone as the tunnel certificate** (`gordaya.pp.ua`).
+That is why this command was wrong for the portfolio hostnames:
 
 ```bash
 cloudflared tunnel route dns <tunnel> crm.pseudoef.pp.ua
 ```
 
-It creates `crm.pseudoef.pp.ua.gordaya.pp.ua`, because the certificate only knows
-the `gordaya.pp.ua` zone. Those records route to the tunnel but do not match any
-ingress hostname, so they return the tunnel's default 404.
+It created `crm.pseudoef.pp.ua.gordaya.pp.ua`, because the certificate only knows
+the `gordaya.pp.ua` zone. Those records routed to the tunnel but did not match
+any ingress hostname, so they returned the tunnel's default 404.
 
 ## Correct records
 
@@ -39,7 +43,7 @@ Do not create an A record unless you intentionally bypass the tunnel.
 
 ## Delete the wrong records
 
-In the **`gordaya.pp.ua`** zone, delete these CNAMEs if present:
+In the **`gordaya.pp.ua`** zone, these CNAMEs were deleted on 2026-10-26:
 
 ```text
 pseudoef.pp.ua
@@ -50,9 +54,10 @@ panel.pseudoef.pp.ua
 salon.pseudoef.pp.ua
 ```
 
-Their full DNS names are `<name>.gordaya.pp.ua`, for example
-`crm.pseudoef.pp.ua.gordaya.pp.ua`. They are harmless because the tunnel returns
-404 for them, but they are confusing and should not stay in the salon zone.
+Their full DNS names were `<name>.gordaya.pp.ua`, for example
+`crm.pseudoef.pp.ua.gordaya.pp.ua`. They were harmless because the tunnel
+returned 404 for them, but they were confusing and did not belong in the salon
+zone.
 
 ## Verify
 

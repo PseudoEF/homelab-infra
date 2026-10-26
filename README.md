@@ -95,7 +95,8 @@ and installs two persisted Termux jobs:
 - The salon demo is `127.0.0.1:3001`, with a separate `data/demo.db`, a runtime
   path guard, fictional seed data and a 6-hour reset.
 - Login and demo hosts have nginx rate limits; demo request bodies are capped.
-- The static sites have a strict CSP and no external fonts, CDNs or images.
+- The static sites have a strict CSP, no external fonts or images; Cloudflare's
+  own analytics beacon is allowed explicitly.
 - No credentials are committed. `cert.pem`, tunnel credentials, `.env` files
   and SQLite databases are gitignored.
 
